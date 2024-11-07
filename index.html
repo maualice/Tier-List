@@ -118,6 +118,14 @@
             display: flex;
         }
 
+        .item-image{
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            background: #fff;/*por si hay alguna imagen transparente*/
+            cursor: grab;
+        }
+
     </style>
 
     <script type="module">
@@ -127,6 +135,29 @@
         addButton.addEventListener('click',()=>{
             imageInput.click()
         }) */
+
+        const $ = el=>document.querySelector(el)
+        const $$ = els=>document.querySelectorAll(el)
+        
+        const imageInput=$('#image-input')
+        const itemSection=$('#selector-items')
+
+        imageInput.addEventListener('change',(event)=>{
+            const [file] = event.target.files //recuperando un solo archivo,files porque es type=files
+
+            if(file){
+                const reader=new FileReader()
+
+                reader.onload=(eventReader)=>{   //se ejecuta cuando el FileReader termina de leer el archivo. La propiedad result del objeto eventReader contiene la URL de la imagen en formato base64.
+                    const imgElement=document.createElement('img')
+                    imgElement.src=eventReader.target.result
+                    imgElement.className='item-image'
+                    itemSection.appendChild(imgElement)
+                }
+
+                reader.readAsDataURL(file) //que lee el contenido de un archivo (file) y lo convierte en una cadena de texto codificada en base64 que representa los datos del archivo en forma de una URL
+            }
+        })
     </script>
 
 </head>
