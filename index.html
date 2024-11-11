@@ -1,70 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tier Maker</title>
     <style>
-        :root{
-            --color-s:#ff7f80;
-            --color-a:#ffc07f;
-            --color-b:#ffdf80;
-            --color-c:#fdff7f;
-            --color-d:#bfff7f;
-            --color-e:#7fff7f;
+        :root {
+            --color-s: #ff7f80;
+            --color-a: #ffc07f;
+            --color-b: #ffdf80;
+            --color-c: #fdff7f;
+            --color-d: #bfff7f;
+            --color-e: #7fff7f;
         }
 
         *,
         *::before,
-        *::after{
+        *::after {
             box-sizing: border-box;
         }
 
-        button{
+        button {
             background: transparent;
             border: 0;
             color: #fff;
-            cursor: pointer;      
+            cursor: pointer;
         }
 
-        body{
+        body {
             background: #111;
             color: #fff;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             margin: 0 auto;
             max-width: 500px;
             padding-inline: 32px;
-            user-select: none; /*impide que el texto sea seleccionado,no es buena practica pero es util en drag and drop,mejor ponerlo en donde se va a utlizar*/
+            user-select: none;
+            /*impide que el texto sea seleccionado,no es buena practica pero es util en drag and drop,mejor ponerlo en donde se va a utlizar*/
         }
 
-        #top-header{
-            display:flex;
+        #top-header {
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding-block: 8px; /*atajo para botton y top*/
+            padding-block: 8px;
+            /*atajo para botton y top*/
 
-            & img{
+            & img {
                 max-width: 125px;
                 height: auto;
             }
         }
 
-        .tier{
+        .tier {
             border: 1px solid #444;
             display: flex;
             flex-direction: column;
             background: #1f1f1f;
         }
 
-        .row{
+        .row {
             display: flex;
             flex-direction: row;
             border-bottom: 1px solid #111;
+            transition: all .3s ease;
+
+            &.drag-over{
+                background: #555;
+                scale: 1.01;
+            }
         }
 
-        .label{
+        .label {
             cursor: pointer;
-            background:var(--level,#09f);
+            background: var(--level, #09f);
             color: #333;
             font-weight: bold;
             width: 50px;
@@ -74,12 +83,12 @@
             align-items: center;
             justify-content: center;
 
-            & span:focus{
+            & span:focus {
                 outline: 1px dolif #fff;
             }
         }
 
-        #selector{
+        #selector {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -87,12 +96,13 @@
             margin-top: 16px;
         }
 
-        #selector-buttons{
+        #selector-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
 
-            & button , & label{
+            & button,
+            & label {
                 cursor: pointer;
                 transition: all .3s ease;
                 background: #222;
@@ -103,14 +113,14 @@
                 height: 24px;
                 padding: 4px;
 
-                &:hover{
+                &:hover {
                     background: #444;
                     scale: 1.1;
                 }
             }
         }
 
-        #selector-items{
+        #selector-items {
             border: 1px solid #666;
             width: 100%;
             height: 100px;
@@ -118,14 +128,14 @@
             display: flex;
         }
 
-        .item-image{
+        .item-image {
             width: 50px;
             height: 50px;
             object-fit: cover;
-            background: #fff;/*por si hay alguna imagen transparente*/
+            background: #fff;
+            /*por si hay alguna imagen transparente*/
             cursor: grab;
         }
-
     </style>
 
     <script type="module">
@@ -136,31 +146,104 @@
             imageInput.click()
         }) */
 
-        const $ = el=>document.querySelector(el)
-        const $$ = els=>document.querySelectorAll(el)
-        
-        const imageInput=$('#image-input')
-        const itemSection=$('#selector-items')
+        const $ = el => document.querySelector(el)
+        const $$ = el => document.querySelectorAll(el)
 
-        imageInput.addEventListener('change',(event)=>{
+        const imageInput = $('#image-input')
+        const itemSection = $('#selector-items')
+
+        function createItem(src) {
+            const imgElement = document.createElement('img')
+            imgElement.draggable = true
+            imgElement.src = src
+            imgElement.className = 'item-image'
+
+            imgElement.addEventListener('dragstart', handleDragStart)
+            imgElement.addEventListener('dragend', handleDragEnd)
+
+            itemSection.appendChild(imgElement)
+            return imgElement
+        }
+
+        imageInput.addEventListener('change', (event) => {
             const [file] = event.target.files //recuperando un solo archivo,files porque es type=files
 
-            if(file){
-                const reader=new FileReader()
+            if (file) {
+                const reader = new FileReader()
 
-                reader.onload=(eventReader)=>{   //se ejecuta cuando el FileReader termina de leer el archivo. La propiedad result del objeto eventReader contiene la URL de la imagen en formato base64.
-                    const imgElement=document.createElement('img')
-                    imgElement.src=eventReader.target.result
-                    imgElement.className='item-image'
-                    itemSection.appendChild(imgElement)
+                reader.onload = (eventReader) => {   //se ejecuta cuando el FileReader termina de leer el archivo. La propiedad result del objeto eventReader contiene la URL de la imagen en formato base64.
+                    createItem(eventReader.target.result)
                 }
 
                 reader.readAsDataURL(file) //que lee el contenido de un archivo (file) y lo convierte en una cadena de texto codificada en base64 que representa los datos del archivo en forma de una URL
             }
         })
+
+        let draggedElement = null
+        let sourceContainer = null
+
+        const rows = $$('.tier .row')
+
+        rows.forEach(row => {
+            row.addEventListener('dragover', handleDragOver)
+            row.addEventListener('drop', handleDrop)
+            row.addEventListener('dragleave', handleDragLeave)
+        })
+
+        itemSection.addEventListener('dragover', handleDragOver)
+        itemSection.addEventListener('drop', handleDrop)
+        itemSection.addEventListener('dragleave', handleDragLeave)
+
+        function handleDrop(event) {
+            event.preventDefault() //importante que este en los tres
+
+            const { currentTarget, dataTransfer } = event
+
+            console.log(event.currentTarget);
+            if (sourceContainer && draggedElement) {
+                sourceContainer.removeChild(draggedElement)
+            }
+
+            if (draggedElement) {
+                const src = dataTransfer.getData('text/plain')
+                const imgElement = createItem(src)
+                currentTarget.appendChild(imgElement)
+            }
+
+            currentTarget.classList.remove('drag-over')
+        }
+        function handleDragOver(event) {
+            event.preventDefault() //importante que este en los tres
+
+            const { currentTarget } = event
+
+            if (sourceContainer === currentTarget) return //para que no dispare evento si se esta arrastrando sobre el mismo label
+
+            currentTarget.classList.add('drag-over')
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault() //importante que este en los tres
+
+            const { currentTarget } = event
+
+            currentTarget.classList.remove('drag-over')
+        }
+
+        function handleDragStart(event) {
+            draggedElement = event.target
+            sourceContainer = draggedElement.parentNode
+            event.dataTransfer.setData('text/plain', draggedElement.src)
+        }
+
+        function handleDragEnd(event) {
+            draggedElement = null
+            sourceContainer = null
+        }
     </script>
 
 </head>
+
 <body>
     <header id="top-header">
         <img src="https://tiermaker.com/images/tiermaker-logo.png">
@@ -190,7 +273,7 @@
                 <span contenteditable="true">C</span>
             </aside>
         </div>
-        
+
         <div class="row">
             <aside class="label" style="--level:var(--color-d)">
                 <span contenteditable="true">D</span>
@@ -207,12 +290,26 @@
     <footer id="selector">
         <section id="selector-buttons">
             <label>
-                <svg xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="1"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M9 12h6" /><path d="M12 9v6" /></svg>
-                <input id="image-input" type="file" hidden /> <!-- esto reemplaza el js comentado para seleccionar la imagen -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                    <path d="M9 12h6" />
+                    <path d="M12 9v6" />
+                </svg>
+                <input accept="image/*" id="image-input" type="file" hidden />
+                <!-- esto reemplaza el js comentado para seleccionar la imagen -->
+                <!-- accept sirve para indicar que tipo de archivos acepta -->
             </label>
 
             <button>
-                <svg xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="1"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" />
+                </svg>
             </button>
         </section>
 
