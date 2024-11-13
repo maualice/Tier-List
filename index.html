@@ -65,7 +65,7 @@
             border-bottom: 1px solid #111;
             transition: all .3s ease;
 
-            &.drag-over{
+            &.drag-over {
                 background: #555;
                 scale: 1.01;
             }
@@ -135,6 +135,11 @@
             background: #fff;
             /*por si hay alguna imagen transparente*/
             cursor: grab;
+
+            &.drag-preview {
+                opacity: .5;
+                pointer-events: none;
+            }
         }
     </style>
 
@@ -211,15 +216,24 @@
             }
 
             currentTarget.classList.remove('drag-over')
+            currentTarget.querySelector('.drag-preview')?.remove()
         }
         function handleDragOver(event) {
             event.preventDefault() //importante que este en los tres
 
-            const { currentTarget } = event
+            const { currentTarget, dataTransfer } = event
 
             if (sourceContainer === currentTarget) return //para que no dispare evento si se esta arrastrando sobre el mismo label
 
             currentTarget.classList.add('drag-over')
+
+            const dragPreview = document.querySelector('.drag-preview') /*el evento se ejecuta constantemente,sin esta validacion se repite la imagen*/
+
+            if (draggedElement && !dragPreview) {
+                const previewElement = draggedElement.cloneNode(true)
+                previewElement.classList.add('drag-preview')
+                currentTarget.appendChild(previewElement)
+            }
         }
 
         function handleDragLeave(event) {
@@ -228,6 +242,7 @@
             const { currentTarget } = event
 
             currentTarget.classList.remove('drag-over')
+            currentTarget.querySelector('.drag-preview')?.remove()
         }
 
         function handleDragStart(event) {
