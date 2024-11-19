@@ -156,6 +156,7 @@
 
         const imageInput = $('#image-input')
         const itemSection = $('#selector-items')
+        const resetButton = $('#reset-tier-button')
 
         function createItem(src) {
             const imgElement = document.createElement('img')
@@ -225,7 +226,7 @@
             currentTarget.classList.remove('drag-over')
             currentTarget.querySelector('.drag-preview')?.remove()
         }
-        
+
         function handleDragOver(event) {
             event.preventDefault() //importante que este en los tres
 
@@ -263,6 +264,14 @@
             draggedElement = null
             sourceContainer = null
         }
+
+        resetButton.addEventListener('click', () => {
+            const items = $$('.tier .item-image')
+            items.forEach(item => {
+                item.remove()
+                itemSection.appendChild(item)
+            })
+        })
     </script>
 
 </head>
@@ -326,7 +335,7 @@
                 <!-- accept sirve para indicar que tipo de archivos acepta -->
             </label>
 
-            <button>
+            <button class="reset-tier-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise">
