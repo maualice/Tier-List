@@ -170,18 +170,25 @@
             return imgElement
         }
 
-        imageInput.addEventListener('change', (event) => {
-            const [file] = event.target.files //recuperando un solo archivo,files porque es type=files
+        function usarFilesToCreateItems(files) {
+            if (files && files.length > 0) {
 
-            if (file) {
-                const reader = new FileReader()
+                //files.forEach(file=>{}) //esto no va a funcionar,va a decir que no es una funcion,porque files no es un array, a veces en js con el tema de web api y del dom no devuelve un array aunque sea una lista(lista de archivos),entonces tiene la propiedad length pero no forecah 
+                //solucion
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader()
 
-                reader.onload = (eventReader) => {   //se ejecuta cuando el FileReader termina de leer el archivo. La propiedad result del objeto eventReader contiene la URL de la imagen en formato base64.
-                    createItem(eventReader.target.result)
-                }
-
-                reader.readAsDataURL(file) //que lee el contenido de un archivo (file) y lo convierte en una cadena de texto codificada en base64 que representa los datos del archivo en forma de una URL
+                    reader.onload = (eventReader) => {   //se ejecuta cuando el FileReader termina de leer el archivo. La propiedad result del objeto eventReader contiene la URL de la imagen en formato base64.
+                        createItem(eventReader.target.result)
+                    }
+                    reader.readAsDataURL(file) //que lee el contenido de un archivo (file) y lo convierte en una cadena de texto codificada en base64 que representa los datos del archivo en forma de una URL
+                })
             }
+        }
+
+        imageInput.addEventListener('change', (event) => {
+            const { files } = event.target //recuperando un solo archivo,files porque es type=files [file]=event.target.files
+            usarFilesToCreateItems(files)
         })
 
         let draggedElement = null
@@ -218,6 +225,7 @@
             currentTarget.classList.remove('drag-over')
             currentTarget.querySelector('.drag-preview')?.remove()
         }
+        
         function handleDragOver(event) {
             event.preventDefault() //importante que este en los tres
 
@@ -313,7 +321,7 @@
                     <path d="M9 12h6" />
                     <path d="M12 9v6" />
                 </svg>
-                <input accept="image/*" id="image-input" type="file" hidden />
+                <input multiple accept="image/*" id="image-input" type="file" hidden />
                 <!-- esto reemplaza el js comentado para seleccionar la imagen -->
                 <!-- accept sirve para indicar que tipo de archivos acepta -->
             </label>
