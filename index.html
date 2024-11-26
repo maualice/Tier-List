@@ -126,6 +126,12 @@
             height: 100px;
             margin-bottom: 100px;
             display: flex;
+            flex-wrap: wrap;
+
+            &.drag-files {
+                background: #555;
+                border-style: dashed;
+            }
         }
 
         .item-image {
@@ -171,7 +177,7 @@
             return imgElement
         }
 
-        function usarFilesToCreateItems(files) {
+        function useFilesToCreateItems(files) {
             if (files && files.length > 0) {
 
                 //files.forEach(file=>{}) //esto no va a funcionar,va a decir que no es una funcion,porque files no es un array, a veces en js con el tema de web api y del dom no devuelve un array aunque sea una lista(lista de archivos),entonces tiene la propiedad length pero no forecah 
@@ -189,7 +195,7 @@
 
         imageInput.addEventListener('change', (event) => {
             const { files } = event.target //recuperando un solo archivo,files porque es type=files [file]=event.target.files
-            usarFilesToCreateItems(files)
+            useFilesToCreateItems(files)
         })
 
         let draggedElement = null
@@ -206,6 +212,31 @@
         itemSection.addEventListener('dragover', handleDragOver)
         itemSection.addEventListener('drop', handleDrop)
         itemSection.addEventListener('dragleave', handleDragLeave)
+
+        itemSection.addEventListener('drop', handleDropFromDesktop)
+        itemSection.addEventListener('dragover', handleDragOverFromDesktop)
+
+        function handleDragOverFromDesktop(event) {
+            event.preventDefault()
+
+            const { currentTarget, dataTransfer } = event
+
+            if (dataTransfer.types.includes('Files')) {
+                currentTarget.classList.add('drag-files')
+            }
+        }
+
+        function handleDropFromDesktop(event) {
+            event.preventDefault()
+
+            const { currentTarget, dataTransfer } = event
+
+            if (dataTransfer.types.includes('Files')) {
+                currentTarget.classList.remove('drag-files')
+                const { files } = dataTransfer
+                useFilesToCreateItems(files)
+            }
+        }
 
         function handleDrop(event) {
             event.preventDefault() //importante que este en los tres
