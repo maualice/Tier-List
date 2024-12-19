@@ -118,6 +118,11 @@
                     scale: 1.1;
                 }
             }
+
+            & svg{
+                width: 100%;
+                height: 100%;
+            }
         }
 
         #selector-items {
@@ -163,6 +168,7 @@
         const imageInput = $('#image-input')
         const itemSection = $('#selector-items')
         const resetButton = $('#reset-tier-button')
+        const saveButton = $('#save-tier-button')
 
         function createItem(src) {
             const imgElement = document.createElement('img')
@@ -281,6 +287,7 @@
 
             const { currentTarget } = event
 
+            //currentTarget.classList.remove('drag-files')
             currentTarget.classList.remove('drag-over')
             currentTarget.querySelector('.drag-preview')?.remove()
         }
@@ -302,6 +309,26 @@
                 item.remove()
                 itemSection.appendChild(item)
             })
+        })
+
+        saveButton.addEventListener('click', () => {
+            const tierContainer = $('.tier')
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+
+            import('https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/+esm') //solo se carga cuando se utiliza(import dinamico)
+                .then(({ default: html2canvas }) => {
+                    html2canvas(tierContainer).then(canvas => {
+                        ctx.drawImage(canvas, 0, 0)
+                        const imgURL = canvas.toDataURL('iamge/png')
+
+                        const downloadLink = document.createElement('a')
+                        downloadLink.download = 'tier.png'
+                        downloadLink.href = imgURL
+                        downloadLink.click()  /*simula que se hace un click*/
+                    })
+                })
+
         })
     </script>
 
@@ -366,12 +393,21 @@
                 <!-- accept sirve para indicar que tipo de archivos acepta -->
             </label>
 
-            <button class="reset-tier-button">
+            <button id="reset-tier-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-rotate-clockwise">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5" />
+                </svg>
+            </button>
+
+            <button id="save-tier-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="1">
+                    <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2"></path>
+                    <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                    <path d="M14 4l0 4l-6 0l0 -4"></path>
                 </svg>
             </button>
         </section>
@@ -383,3 +419,5 @@
 </body>
 
 </html>
+
+<!--win + . para emoji-->
